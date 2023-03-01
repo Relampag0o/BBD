@@ -5369,18 +5369,172 @@ select * from idiomaspais;
 SELECT @@sql_mode;
 SET sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
--- 1. Mostrar nombre de continente y número de países de ese continente (contar).
 
+-- 1. Mostrar nombre de continente y número de países de ese continente (contar).
+select continente,count(nombre) 
+from pais
+group by continente;
 
 -- 2. Mostrar la población máxima (número de habitantes máximo) de la tabla país.
 
-select max(poblacion) from pais;
+select nombre,max(poblacion) 
+from pais
+LIMIT 1;
 
+SELECT MAX(poblacion) FROM pais;
 -- -- 3. Mostrar los idiomas que se hablan en España (Spain) y el porcentaje
 -- que se habla cada idioma. Ordenar de forma descendente por el campo
 -- porcentaje
 
+select idioma,porcentaje
+from idiomaspais
+INNER JOIN pais on idiomaspais.cod_pais=pais.codigo
+where pais.nombre='Spain'
+order by idiomaspais.porcentaje DESC;
+
+-- 4. Mostrar todas las ciudades de España (Spain) junto a su población.
+-- Debe mostrarse nombre de país, de ciudad y población de esta.
+
+select pais.nombre,ciudad.nombre,ciudad.poblacion
+from ciudad
+INNER JOIN  pais on ciudad.codigo_pais=pais.codigo
+where pais.nombre='Spain';
+
+-- 5. Mostrar todas las ciudades de España (Spain) junto a su población.
+-- Debe mostrarse nombre de país, población del país, nombre de ciudad y
+-- población de esta. Añadir también el porcentaje que supone la población
+-- de la ciudad con respecto a la del país.
+select pais.nombre,ciudad.nombre,ciudad.poblacion,pais.poblacion/ciudad.poblacion AS Relacion
+from ciudad
+INNER JOIN  pais on ciudad.codigo_pais=pais.codigo
+where pais.nombre='Spain';
+
+-- 6. Mostrar datos de los 10 países con mayor población. Nombre de país,
+-- continente, población.
+
+select pais.nombre,pais.continente,Max(pais.poblacion)
+from pais
+order by max(poblacion) DESC
+LIMIT 10;
+
+SELECT nombre, continente, poblacion
+FROM pais
+ORDER BY poblacion DESC
+LIMIT 10;
+
+-- PREGUNTAR POR QUE ESTO ARROJA RESULTADOS DIFERENTES
+
+-- 7. Mostrar los datos del país de mayores habitantes de Europa (Europe).
+SELECT *
+FROM pais
+WHERE continente = 'Europe' 
+AND poblacion = (SELECT MAX(poblacion) FROM pais WHERE continente = 'Europe')
+LIMIT 1;
+
+-- 8. Mostrar la media de la esperanza de vida por continente
+select continente,esperanzaVida
+from pais
+
+group by continente;
+
+--  9. Mostrar número de países por continente y región (contar).
 
 
+SELECT continente, region, COUNT(nombre) AS num_paises
+FROM pais
+GROUP BY continente, region;
 
+-- 10. Mostrar la densidad de población de los países de Europa (Europe).
+-- La densidad de población se mide en habitantes por superficie 
+-- (habitantes/superficie)
+select nombre,poblacion/superficie as DENSIDAD
+from pais
+where continente='Europe';
+
+-- 11. Para cada uno de los continentes, ¿cuál es la suma de la superficie de
+-- los países que pertenecen al mismo?
+
+SELECT continente, SUM(superficie) AS suma_superficie
+FROM pais
+GROUP BY continente;
+
+-- 12 Muestra la población que está sujeta en cada continente a cada una
+-- de las formas de gobierno
+select continente,poblacion,formagobierno
+from pais
+group by continente,formagobierno;
+
+-- O LA SIGUIENTE(PREFIERO LA PRIMERA):
+
+SELECT continente, formagobierno, SUM(poblacion) AS poblacion_total
+FROM pais
+GROUP BY continente, formagobierno;
+
+-- 13 Lista los continentes cuya suma de superficie de países es mayor de 5
+-- millones
+
+SELECT continente, SUM(superficie) AS suma_superficie
+FROM pais
+GROUP BY continente
+HAVING SUM(superficie) > 5000000;
+
+-- IMPORTANTE: EL WHERE NO SE PUEDE UTILIZAR DESPUES DE UN GROUP BY. 
+-- PARA ESO SE UTILIZA HAVING.(aplicar condición una vez que se ha agrupado)
+
+-- 14. Capital de cada país
+select pais.nombre,ciudad.nombre
+from ciudad
+INNER JOIN pais on pais.Capital=ciudad.id
+group by pais.nombre;
+
+-- 15. Países con capital con más de tres millones de habitantes
+select pais.nombre,ciudad.poblacion
+from pais
+INNER JOIN ciudad on ciudad.id=pais.Capital
+
+where ciudad.poblacion> 3000000;
+
+-- 16. Obtener una lista de idiomas junto con el nombre del país en el que
+-- se hablan
+select idiomaspais.idioma, pais.nombre
+from idiomaspais
+INNER JOIN pais on idiomaspais.cod_pais=pais.codigo
+group by pais.nombre;
+
+-- 17. Obtener una lista de idiomas junto con el nombre de la ciudad y país
+-- en que se hablan
+select idiomaspais.idioma, pais.nombre,ciudad.nombre
+from idiomaspais
+INNER JOIN pais on idiomaspais.cod_pais=pais.codigo
+INNER JOIN ciudad on idiomaspais.cod_pais=ciudad.codigo_pais
+group by pais.nombre;
+
+-- 18. Obtener una lista de idiomas oficiales junto con el nombre de la
+-- ciudad y país en que se hablan
+select pais.nombre,ciudad.nombre,idiomaspais.idioma,idiomaspais.es_oficial
+from idiomaspais
+-- where idiomaspais.es_oficial='T'
+INNER JOIN ciudad on idiomaspais.cod_pais=ciudad.codigo_pais
+INNER JOIN pais on idiomaspais.cod_pais=pais.codigo
+group by idiomaspais.idioma
+HAVING idiomaspais.es_oficial='T';
+
+
+-- 19. Lista las ciudades que están en continentes cuya esperanza de vida
+-- media es menor a 60 años
+select pais.nombre,pais.esperanzaVida,ciudad.nombre
+from ciudad
+-- REALMENTE NO ENTIENDO POR QUE SE ELIGE "FROM CIUDAD" SI ESTOY COGIENDO DATOS DE OTRAS TABLAS TAMBIÉN
+INNER JOIN pais ON ciudad.codigo_pais=codigo
+group by ciudad.nombre
+HAVING pais.esperanzavida>60;
+
+-- 20. Lista las capitales que tengan una población inferior a 10.000
+
+-- ENTENDIENDO QUE SEA LA POBLACIÓN POR CIUDAD (no tendría sentido
+-- que la población del país fuese menor a 10.000)
+
+select ciudad.nombre,ciudad.poblacion
+from ciudad
+where ciudad.poblacion<10000;
 
