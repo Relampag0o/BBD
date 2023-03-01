@@ -7,4 +7,4 @@ git status
 Importante para asignar una clave: 
 ssh-keygen -t rsa -b 4096 -C "josemariar.l17@gmail.com"
 ssh-agent
-
+git remote add
