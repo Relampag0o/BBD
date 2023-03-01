@@ -1,0 +1,3 @@
+
+git rm --cached nombrearchivo
+git -m "mensaje"
